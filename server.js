@@ -1,13 +1,24 @@
 const express = require("express");
 const fetch = require("node-fetch");
 const path = require("path");
+const session = require("express-session");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const STORE = process.env.SHOPIFY_STORE || "tom-tasty.myshopify.com";
 const CLIENT_ID = process.env.SHOPIFY_CLIENT_ID;
 const CLIENT_SECRET = process.env.SHOPIFY_CLIENT_SECRET;
 const API_VERSION = "2025-01";
+const SESSION_SECRET = process.env.SESSION_SECRET || "tt-kitchen-secret-2025";
+const ACCESS_PASSWORD = process.env.ACCESS_PASSWORD || "BYL";
 let tokenCache = { token: null, expiresAt: 0 };
+
+app.use(session({ secret: SESSION_SECRET, resave: false, saveUninitialized: false, cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 } }));
+app.use(express.urlencoded({ extended: false }));
+
+function requireAuth(req, res, next) {
+  if (req.session && req.session.authenticated) return next();
+  res.redirect("/login");
+}
 
 async function getToken() {
   if (!CLIENT_ID || !CLIENT_SECRET) throw new Error("SHOPIFY_CLIENT_ID and SHOPIFY_CLIENT_SECRET env vars required");
@@ -40,7 +51,25 @@ const VM = {"\u2696\uFE0F":"Original","\uD83D\uDCAA":"Sport","\uD83D\uDD25":"Wei
 function getVariant(t) { for (const [e,v] of Object.entries(VM)) { if (t.includes(e)) return v; } const l=t.toLowerCase(); if (["suppe","risotto","kartoffel","gem\u00FCse","pak choi"].some(w=>l.includes(w))) return "Beilage"; if (l.includes("tasting")) return "Tasting-Box"; return "Standard"; }
 function cleanName(t) { for (const e of Object.keys(VM)) t=t.replace(e,"").trim(); return t; }
 
-app.get("/api/production", async (req, res) => {
+app.get("/login", (req, res) => {
+  if (req.session && req.session.authenticated) return res.redirect("/");
+  res.sendFile(path.join(__dirname, "login.html"));
+});
+
+app.post("/login", (req, res) => {
+  const pw = (req.body.password || "").trim();
+  if (pw === ACCESS_PASSWORD) {
+    req.session.authenticated = true;
+    return res.redirect("/");
+  }
+  res.redirect("/login?error=1");
+});
+
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => res.redirect("/login"));
+});
+
+app.get("/api/production", requireAuth, async (req, res) => {
   try {
     const token = await getToken();
     const orders = await fetchAllOrders(token);
@@ -65,5 +94,5 @@ app.get("/api/production", async (req, res) => {
 });
 
 app.use((req, res, next) => { res.setHeader("Content-Security-Policy", "frame-ancestors https://admin.shopify.com https://"+STORE+";"); next(); });
-app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
+app.get("/", requireAuth, (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 app.listen(PORT, () => console.log("Kitchen App on port " + PORT));
