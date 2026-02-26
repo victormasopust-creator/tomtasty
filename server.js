@@ -10,7 +10,7 @@ const CLIENT_SECRET = process.env.SHOPIFY_CLIENT_SECRET;
 const API_VERSION = "2025-01";
 const SESSION_SECRET = process.env.SESSION_SECRET || "tt-kitchen-secret-2025";
 const ACCESS_PASSWORD = process.env.ACCESS_PASSWORD || "BYL";
-const LOOP_API_TOKEN = process.env.LOOP_API_TOKEN || "jpzZP8mh1hm59G44SC3ICNnxOxHQCnaoE2QnfO6XivegWMqWx2CBGhqxBZlb0ceC";
+const LOOP_API_TOKEN = process.env.LOOP_API_TOKEN;
 const LOOP_API_BASE = "https://api.loopsubscriptions.com/admin/2023-10";
 let tokenCache = { token: null, expiresAt: 0 };
 
