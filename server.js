@@ -97,67 +97,73 @@ app.get("/api/production", requireAuth, async (req, res) => {
 
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-let subsCache = { data: null, fetchedAt: 0 };
+let chargesCache = { data: null, fetchedAt: 0 };
 const CACHE_TTL = 5 * 60 * 1000; // 5 Minuten
 
-async function fetchAllActiveSubscriptions() {
-  if (subsCache.data && Date.now() - subsCache.fetchedAt < CACHE_TTL) {
-    console.log("[Loop] Cache hit:", subsCache.data.length, "Abos");
-    return subsCache.data;
+async function fetchUpcomingCharges() {
+  if (chargesCache.data && Date.now() - chargesCache.fetchedAt < CACHE_TTL) {
+    console.log("[Loop] Cache hit:", chargesCache.data.length, "Charges");
+    return chargesCache.data;
   }
   if (!LOOP_API_TOKEN) throw new Error("LOOP_API_TOKEN nicht gesetzt");
-  console.log("[Loop] Starte Subscription-Fetch...");
-  let allSubs = [], page = 1;
+  console.log("[Loop] Starte Upcoming Charges Fetch...");
+  let allCharges = [], page = 1;
   while (true) {
-    if (page > 1) await delay(1500); // Loop limit: 2 req / 3s für subscription listing
-    console.log("[Loop] Fetch Seite", page);
-    const resp = await fetch(LOOP_API_BASE + "/subscription?status=ACTIVE&limit=250&page=" + page, {
-      headers: { "X-Loop-Token": LOOP_API_TOKEN },
-      timeout: 20000
-    });
-    console.log("[Loop] Seite", page, "Status:", resp.status);
+    if (page > 1) await delay(1500);
+    console.log("[Loop] Fetch Charges Seite", page);
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 20000);
+    let resp;
+    try {
+      resp = await fetch(LOOP_API_BASE + "/charge?status=UPCOMING&limit=250&page=" + page, {
+        headers: { "X-Loop-Token": LOOP_API_TOKEN },
+        signal: ctrl.signal
+      });
+    } catch (e) {
+      clearTimeout(tid);
+      if (e.name === "AbortError") throw new Error("Loop API Timeout (>20s) auf Seite " + page + " – Netzwerk oder Token prüfen");
+      throw e;
+    }
+    clearTimeout(tid);
+    console.log("[Loop] Charges Seite", page, "Status:", resp.status);
     if (resp.status === 429) { console.log("[Loop] Rate limit, warte 2s..."); await delay(2000); continue; }
     if (resp.status === 401 || resp.status === 403) throw new Error("Loop API Auth-Fehler (Status " + resp.status + ") – Token prüfen");
     if (!resp.ok) throw new Error("Loop API Fehler: Status " + resp.status);
     const data = await resp.json();
-    allSubs = allSubs.concat(data.data || []);
-    console.log("[Loop] Seite", page, "geladen,", (data.data || []).length, "Abos, Total:", allSubs.length);
+    allCharges = allCharges.concat(data.data || []);
+    console.log("[Loop] Seite", page, "geladen,", (data.data || []).length, "Charges, Total:", allCharges.length);
     if (!data.pageInfo || !data.pageInfo.hasNextPage) break;
     page++;
   }
-  console.log("[Loop] Fertig:", allSubs.length, "Abos geladen");
-  subsCache = { data: allSubs, fetchedAt: Date.now() };
-  return allSubs;
+  console.log("[Loop] Fertig:", allCharges.length, "Upcoming Charges geladen");
+  chargesCache = { data: allCharges, fetchedAt: Date.now() };
+  return allCharges;
 }
 
 app.get("/api/forecast", requireAuth, async (req, res) => {
   try {
-    const subs = await fetchAllActiveSubscriptions();
+    const charges = await fetchUpcomingCharges();
     const products = {};
-    for (const sub of subs) {
-      const isDunning = sub.lastPaymentStatus !== "SUCCESS";
-      for (const line of sub.lines || []) {
-        const key = line.productShopifyId + "-" + line.variantShopifyId;
+    for (const charge of charges) {
+      for (const line of charge.lineItems || charge.lines || []) {
+        const key = (line.productShopifyId || line.productId || "") + "-" + (line.variantShopifyId || line.variantId || "");
         if (!products[key]) {
           products[key] = {
-            productId: line.productShopifyId,
-            variantId: line.variantShopifyId,
-            productTitle: line.productTitle,
+            productTitle: line.productTitle || "",
             sku: line.sku || "",
             totalQty: 0,
             nonDunningQty: 0,
             subCount: 0
           };
         }
-        products[key].totalQty += line.quantity;
-        if (!isDunning) products[key].nonDunningQty += line.quantity;
+        products[key].totalQty += (line.quantity || 1);
+        products[key].nonDunningQty += (line.quantity || 1);
         products[key].subCount += 1;
       }
     }
     const sorted = Object.values(products).sort((a, b) => b.totalQty - a.totalQty);
     const totalQty = sorted.reduce((s, p) => s + p.totalQty, 0);
-    const totalNonDunning = sorted.reduce((s, p) => s + p.nonDunningQty, 0);
-    res.json({ timestamp: new Date().toISOString(), activeSubscriptions: subs.length, totalQuantity: totalQty, totalNonDunning: totalNonDunning, products: sorted });
+    res.json({ timestamp: new Date().toISOString(), activeSubscriptions: charges.length, totalQuantity: totalQty, totalNonDunning: totalQty, products: sorted });
   } catch (err) { console.error("Forecast API Error:", err); res.status(500).json({ error: err.message }); }
 });
 
