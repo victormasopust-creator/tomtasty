@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tom Tasty - Zugang</title>
+<style>
+:root{--tt-green:#2D5016;--tt-green-light:#E8F5E1;--tt-green-mid:#4A7C23;--bg:#F6F6F7;--card:#FFF;--text:#1A1A1A;--border:#E5E7EB;--shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.08);--radius:16px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);padding:48px 40px;width:100%;max-width:380px;text-align:center}
+.logo{font-size:48px;margin-bottom:16px}
+h1{font-size:22px;font-weight:700;color:var(--tt-green);margin-bottom:6px}
+.subtitle{font-size:13px;color:#6B7280;margin-bottom:32px}
+input[type=password]{width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;font-size:16px;font-family:inherit;outline:none;transition:border-color .2s,box-shadow .2s;letter-spacing:2px;text-align:center}
+input[type=password]:focus{border-color:var(--tt-green);box-shadow:0 0 0 3px rgba(45,80,22,.1)}
+input[type=password]::placeholder{letter-spacing:0;color:#9CA3AF}
+button{width:100%;padding:13px;background:var(--tt-green);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px;transition:background .15s}
+button:hover{background:var(--tt-green-mid)}
+.error{margin-top:14px;padding:10px 14px;background:#FEE2E2;color:#991B1B;border-radius:8px;font-size:13px;font-weight:500;display:none}
+.error.show{display:block}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">&#127859;</div>
+  <h1>Tom Tasty Küche</h1>
+  <div class="subtitle">Bitte Zugangscode eingeben</div>
+  <form method="POST" action="/login" onsubmit="return validate()">
+    <input type="password" name="password" id="pw" placeholder="Zugangscode" autocomplete="off" autofocus>
+    <button type="submit">Zugang</button>
+    <div class="error" id="err">Falscher Zugangscode. Bitte nochmal versuchen.</div>
+  </form>
+</div>
+<script>
+const p = new URLSearchParams(window.location.search);
+if (p.get('error')) document.getElementById('err').classList.add('show');
+function validate() {
+  const v = document.getElementById('pw').value.trim();
+  if (!v) { document.getElementById('err').textContent = 'Bitte Zugangscode eingeben.'; document.getElementById('err').classList.add('show'); return false; }
+  return true;
+}
+</script>
+</body>
+</html>
