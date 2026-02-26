@@ -95,12 +95,19 @@ app.get("/api/production", requireAuth, async (req, res) => {
   } catch (err) { console.error("API Error:", err); res.status(500).json({error:err.message}); }
 });
 
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
 async function fetchAllActiveSubscriptions() {
   let allSubs = [], page = 1;
   while (true) {
+    if (page > 1) await delay(500);
     const resp = await fetch(LOOP_API_BASE + "/subscription?status=ACTIVE&limit=250&page=" + page, {
       headers: { "X-Loop-Token": LOOP_API_TOKEN }
     });
+    if (resp.status === 429) {
+      await delay(2000);
+      continue;
+    }
     const data = await resp.json();
     allSubs = allSubs.concat(data.data || []);
     if (!data.pageInfo || !data.pageInfo.hasNextPage) break;
