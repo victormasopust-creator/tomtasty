@@ -97,22 +97,26 @@ app.get("/api/production", requireAuth, async (req, res) => {
 
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+let subsCache = { data: null, fetchedAt: 0 };
+const CACHE_TTL = 5 * 60 * 1000; // 5 Minuten
+
 async function fetchAllActiveSubscriptions() {
+  if (subsCache.data && Date.now() - subsCache.fetchedAt < CACHE_TTL) {
+    return subsCache.data;
+  }
   let allSubs = [], page = 1;
   while (true) {
-    if (page > 1) await delay(500);
+    if (page > 1) await delay(1500); // Loop limit: 2 req / 3s für subscription listing
     const resp = await fetch(LOOP_API_BASE + "/subscription?status=ACTIVE&limit=250&page=" + page, {
       headers: { "X-Loop-Token": LOOP_API_TOKEN }
     });
-    if (resp.status === 429) {
-      await delay(2000);
-      continue;
-    }
+    if (resp.status === 429) { await delay(2000); continue; }
     const data = await resp.json();
     allSubs = allSubs.concat(data.data || []);
     if (!data.pageInfo || !data.pageInfo.hasNextPage) break;
     page++;
   }
+  subsCache = { data: allSubs, fetchedAt: Date.now() };
   return allSubs;
 }
 
