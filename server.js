@@ -10,6 +10,8 @@ const CLIENT_SECRET = process.env.SHOPIFY_CLIENT_SECRET;
 const API_VERSION = "2025-01";
 const SESSION_SECRET = process.env.SESSION_SECRET || "tt-kitchen-secret-2025";
 const ACCESS_PASSWORD = process.env.ACCESS_PASSWORD || "BYL";
+const LOOP_API_TOKEN = process.env.LOOP_API_TOKEN || "jpzZP8mh1hm59G44SC3ICNnxOxHQCnaoE2QnfO6XivegWMqWx2CBGhqxBZlb0ceC";
+const LOOP_API_BASE = "https://api.loopsubscriptions.com/admin/2023-10";
 let tokenCache = { token: null, expiresAt: 0 };
 
 app.use(session({ secret: SESSION_SECRET, resave: false, saveUninitialized: false, cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 } }));
@@ -91,6 +93,51 @@ app.get("/api/production", requireAuth, async (req, res) => {
     const totals = sorted.reduce((a,d) => ({total:a.total+d.total,original:a.original+d.original,sport:a.sport+d.sport,weightloss:a.weightloss+d.weightloss,beilage:a.beilage+d.beilage,standard:a.standard+d.standard,revenue:a.revenue+d.revenue}),{total:0,original:0,sport:0,weightloss:0,beilage:0,standard:0,revenue:0});
     res.json({timestamp:new Date().toISOString(),totalOrders:filtered.length,totalPortions:totals.total,totals,dishes:sorted,orders:orderDetails.sort((a,b)=>b.total-a.total)});
   } catch (err) { console.error("API Error:", err); res.status(500).json({error:err.message}); }
+});
+
+async function fetchAllActiveSubscriptions() {
+  let allSubs = [], page = 1;
+  while (true) {
+    const resp = await fetch(LOOP_API_BASE + "/subscription?status=ACTIVE&limit=250&page=" + page, {
+      headers: { "X-Loop-Token": LOOP_API_TOKEN }
+    });
+    const data = await resp.json();
+    allSubs = allSubs.concat(data.data || []);
+    if (!data.pageInfo || !data.pageInfo.hasNextPage) break;
+    page++;
+  }
+  return allSubs;
+}
+
+app.get("/api/forecast", requireAuth, async (req, res) => {
+  try {
+    const subs = await fetchAllActiveSubscriptions();
+    const products = {};
+    for (const sub of subs) {
+      const isDunning = sub.lastPaymentStatus !== "SUCCESS";
+      for (const line of sub.lines || []) {
+        const key = line.productShopifyId + "-" + line.variantShopifyId;
+        if (!products[key]) {
+          products[key] = {
+            productId: line.productShopifyId,
+            variantId: line.variantShopifyId,
+            productTitle: line.productTitle,
+            sku: line.sku || "",
+            totalQty: 0,
+            nonDunningQty: 0,
+            subCount: 0
+          };
+        }
+        products[key].totalQty += line.quantity;
+        if (!isDunning) products[key].nonDunningQty += line.quantity;
+        products[key].subCount += 1;
+      }
+    }
+    const sorted = Object.values(products).sort((a, b) => b.totalQty - a.totalQty);
+    const totalQty = sorted.reduce((s, p) => s + p.totalQty, 0);
+    const totalNonDunning = sorted.reduce((s, p) => s + p.nonDunningQty, 0);
+    res.json({ timestamp: new Date().toISOString(), activeSubscriptions: subs.length, totalQuantity: totalQty, totalNonDunning: totalNonDunning, products: sorted });
+  } catch (err) { console.error("Forecast API Error:", err); res.status(500).json({ error: err.message }); }
 });
 
 app.use((req, res, next) => { res.setHeader("Content-Security-Policy", "frame-ancestors https://admin.shopify.com https://"+STORE+";"); next(); });
