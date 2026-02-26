@@ -106,7 +106,7 @@ async function fetchAllActiveSubscriptions() {
   }
   let allSubs = [], page = 1;
   while (true) {
-    if (page > 1) await delay(300);
+    if (page > 1) await delay(1500); // Loop limit: 2 req / 3s für subscription listing
     const resp = await fetch(LOOP_API_BASE + "/subscription?status=ACTIVE&limit=250&page=" + page, {
       headers: { "X-Loop-Token": LOOP_API_TOKEN }
     });
