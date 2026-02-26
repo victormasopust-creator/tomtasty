@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tom Tasty – Forecast Freitag 27. Feb 2026</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --border: #2a2d3a;
+    --text: #e4e4e7;
+    --muted: #71717a;
+    --accent: #f97316;
+    --green: #22c55e;
+    --blue: #3b82f6;
+    --purple: #a855f7;
+    --red: #ef4444;
+    --yellow: #eab308;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  h1 span { color: var(--accent); }
+  .subtitle { color: var(--muted); font-size: 14px; margin-top: 4px; }
+  .badge {
+    background: rgba(249, 115, 22, 0.15);
+    color: var(--accent);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* KPI Cards */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .kpi {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .kpi-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .kpi-value {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -1px;
+  }
+  .kpi-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  /* Variant Bars */
+  .variants-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 32px;
+  }
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+  .variant-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .variant-label {
+    width: 140px;
+    font-size: 14px;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .variant-bar-bg {
+    flex: 1;
+    height: 28px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  .variant-bar {
+    height: 100%;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: width 1s ease;
+  }
+  .variant-count {
+    width: 60px;
+    text-align: right;
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  /* Dish Table */
+  .dishes-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 32px;
+  }
+  .tab-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .tab.active, .tab:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  th:nth-child(2), td:nth-child(2) { text-align: right; }
+  th:nth-child(3), td:nth-child(3) { text-align: right; }
+  th:nth-child(4), td:nth-child(4) { text-align: right; }
+  td {
+    padding: 12px;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .dish-name { font-weight: 500; }
+  .qty-bar {
+    display: inline-block;
+    height: 6px;
+    border-radius: 3px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .variant-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .tag-original { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .tag-sport { background: rgba(168,85,247,0.15); color: var(--purple); }
+  .tag-weightloss { background: rgba(239,68,68,0.15); color: var(--red); }
+  .tag-beilage { background: rgba(234,179,8,0.15); color: var(--yellow); }
+  .tag-andere { background: rgba(113,113,122,0.15); color: var(--muted); }
+
+  .rank {
+    color: var(--muted);
+    font-size: 12px;
+    width: 30px;
+    display: inline-block;
+  }
+  .rank-top { color: var(--accent); font-weight: 700; }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 20px 0;
+  }
+
+  @media print {
+    body { background: #fff; color: #111; padding: 10px; }
+    .kpi, .variants-section, .dishes-section {
+      border: 1px solid #ddd;
+      background: #fff;
+    }
+    .variant-bar-bg { background: #f0f0f0; }
+    .tab-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <h1>🍽️ Tom Tasty <span>Forecast</span></h1>
+      <div class="subtitle">Freitag, 27. Februar 2026 · Daten direkt aus Loop Subscriptions</div>
+    </div>
+    <div class="badge">📡 Live aus Loop API · 517 aktive Abos</div>
+  </header>
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">Bestellungen</div>
+      <div class="kpi-value" style="color:var(--accent)">362</div>
+      <div class="kpi-sub">von 517 aktiven Abos (70%)</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Gerichte Total</div>
+      <div class="kpi-value" style="color:var(--green)">2'256</div>
+      <div class="kpi-sub">Ø 6.2 Gerichte pro Bestellung</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Umsatz (brutto)</div>
+      <div class="kpi-value" style="color:var(--blue)">33'708</div>
+      <div class="kpi-sub">CHF · Ø 93.12 pro Bestellung</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Verschiedene Gerichte</div>
+      <div class="kpi-value" style="color:var(--purple)">40</div>
+      <div class="kpi-sub">auf der Karte diese Woche</div>
+    </div>
+  </div>
+  <div class="variants-section">
+    <div class="section-title">Linien-Verteilung</div>
+    <div class="variant-row">
+      <div class="variant-label">⚖️ Original</div>
+      <div class="variant-bar-bg">
+        <div class="variant-bar" style="width:82.4%;background:var(--blue)">1'858</div>
+      </div>
+      <div class="variant-count">82.4%</div>
+    </div>
+    <div class="variant-row">
+      <div class="variant-label">🔥 Weightloss</div>
+      <div class="variant-bar-bg">
+        <div class="variant-bar" style="width:3.6%;background:var(--red);min-width:50px">82</div>
+      </div>
+      <div class="variant-count">3.6%</div>
+    </div>
+    <div class="variant-row">
+      <div class="variant-label">💪 Sport</div>
+      <div class="variant-bar-bg">
+        <div class="variant-bar" style="width:1.2%;background:var(--purple);min-width:40px">28</div>
+      </div>
+      <div class="variant-count">1.2%</div>
+    </div>
+    <div class="variant-row">
+      <div class="variant-label">🥗 Beilagen / Suppen</div>
+      <div class="variant-bar-bg">
+        <div class="variant-bar" style="width:12.8%;background:var(--yellow)">288</div>
+      </div>
+      <div class="variant-count">12.8%</div>
+    </div>
+  </div>
+  <div class="dishes-section">
+    <div class="section-title">Produktionsliste – alle Gerichte</div>
+    <div class="tab-bar">
+      <div class="tab active" onclick="filterDishes('all')">Alle (40)</div>
+      <div class="tab" onclick="filterDishes('original')">⚖️ Original (14)</div>
+      <div class="tab" onclick="filterDishes('weightloss')">🔥 Weightloss (10)</div>
+      <div class="tab" onclick="filterDishes('sport')">💪 Sport (8)</div>
+      <div class="tab" onclick="filterDishes('beilage')">🥗 Beilagen (8)</div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th style="text-align:left">Gericht</th>
+          <th>Anzahl</th>
+          <th>Umsatz CHF</th>
+          <th>Linie</th>
+        </tr>
+      </thead>
+      <tbody id="dishTable"></tbody>
+    </table>
+  </div>
+  <div class="dishes-section">
+    <div class="section-title">📊 Hinweise zum Forecast</div>
+    <div style="font-size:14px;color:var(--muted);line-height:1.8">
+      <p>• <strong>362 von 517</strong> aktiven Abos werden am Freitag abgerechnet. Die restlichen 155 haben entweder geskippt, einen 2-Wochen-Rhythmus oder ein anderes Abrechnungsdatum.</p>
+      <p>• Der Umsatz von <strong>CHF 33'708</strong> ist der Brutto-Bestellwert nach Rabatten (discountedPrice), aber vor allfälligen Payment-Failures.</p>
+      <p>• <strong>Überraschungsgeschenke</strong> (24 Stk.) sind Loyalty-Rewards und werden automatisch bei der 3. bzw. 5. Bestellung hinzugefügt.</p>
+      <p>• Datenquelle: Loop Subscriptions Admin API, abgerufen am 26.02.2026 um ca. 20:00 UTC.</p>
+    </div>
+  </div>
+  <footer>
+    Tom Tasty AG · Forecast generiert via Loop Subscriptions API · Stand: 26.02.2026
+  </footer>
+</div>
+<script>
+const dishes = [
+  {name:"Chop Suey mit Rindfleisch ⚖️",qty:246,rev:4129.45,v:"original"},
+  {name:"Lasagne al forno ⚖️",qty:211,rev:3502.33,v:"original"},
+  {name:"Kalbshackbraten mit Wurzelgemüse ⚖️",qty:185,rev:3035.81,v:"original"},
+  {name:"Poulet-Saltimbocca mit Rosmarinrisotto ⚖️",qty:155,rev:2718.92,v:"original"},
+  {name:"Satay Chicken mit Jasminreis ⚖️",qty:147,rev:2534.25,v:"original"},
+  {name:"Gebratener Lachs mit Fenchel & Erbsen ⚖️",qty:143,rev:2205.04,v:"original"},
+  {name:"Tantanmen Ramen Suppe ⚖️",qty:141,rev:2044.35,v:"original"},
+  {name:"Lauchrisotto mit Shiitake ⚖️",qty:113,rev:1840.56,v:"original"},
+  {name:"Kürbis-Gnocchi mit Wintergemüse ⚖️",qty:106,rev:1547.34,v:"original"},
+  {name:"Vegetarische Kürbis Carbonara ⚖️",qty:89,rev:1302.01,v:"original"},
+  {name:"Chili sin Carne mit Reis ⚖️",qty:87,rev:1119.94,v:"original"},
+  {name:"Ungarisches Tempeh Gulasch mit Kartoffeln ⚖️",qty:82,rev:1186.64,v:"original"},
+  {name:"Veganer Mapo Tofu mit Jasminreis ⚖️",qty:79,rev:1236.39,v:"original"},
+  {name:"Beluga Linsen Curry mit Kartoffeln ⚖️",qty:74,rev:1071.99,v:"original"},
+  {name:"Kokos-Kürbissuppe",qty:48,rev:398.68,v:"beilage"},
+  {name:"Wintergemüse",qty:36,rev:176.60,v:"beilage"},
+  {name:"Mediterrane Gemüsesuppe",qty:35,rev:298.55,v:"beilage"},
+  {name:"Rosmarinrisotto",qty:34,rev:161.88,v:"beilage"},
+  {name:"Lauch-Kartoffelsuppe",qty:32,rev:254.08,v:"beilage"},
+  {name:"Poulet-Saltimbocca mit Rosmarinrisotto 🔥",qty:31,rev:519.72,v:"weightloss"},
+  {name:"Petersilienkartoffeln",qty:29,rev:116.80,v:"beilage"},
+  {name:"Pak Choi Gemüse",qty:28,rev:114.16,v:"beilage"},
+  {name:"Vegetarische Kürbis Carbonara 🔥",qty:26,rev:345.95,v:"weightloss"},
+  {name:"Haselnuss-Topinambursuppe",qty:22,rev:189.42,v:"beilage"},
+  {name:"Überraschungsgeschenk bei 3. Bestellung",qty:14,rev:0,v:"beilage"},
+  {name:"Überraschungsgeschenk bei 5. Bestellung",qty:10,rev:0,v:"beilage"},
+  {name:"Tantanmen Ramen Suppe 🔥",qty:8,rev:117.12,v:"weightloss"},
+  {name:"Satay Chicken mit Jasminreis 💪",qty:7,rev:124.60,v:"sport"},
+  {name:"Chop Suey mit Rindfleisch 💪",qty:7,rev:115.92,v:"sport"},
+  {name:"Poulet-Saltimbocca mit Caponata 💪",qty:6,rev:102.60,v:"sport"},
+  {name:"Beluga Linsen Curry mit Kartoffeln 🔥",qty:4,rev:53.20,v:"weightloss"},
+  {name:"Tantanmen Ramen Suppe 💪",qty:4,rev:60.80,v:"sport"},
+  {name:"Chop Suey mit Rindfleisch 🔥",qty:3,rev:51.30,v:"weightloss"},
+  {name:"Satay Chicken mit Jasminreis 🔥",qty:3,rev:55.10,v:"weightloss"},
+  {name:"Gebratener Lachs mit Fenchel & Erbsen 🔥",qty:3,rev:47.73,v:"weightloss"},
+  {name:"Vegetarische Kürbis Carbonara 💪",qty:2,rev:30.40,v:"sport"},
+  {name:"Lauchrisotto mit Shiitake 🔥",qty:2,rev:34.20,v:"weightloss"},
+  {name:"Lasagne al forno 🔥",qty:2,rev:34.20,v:"weightloss"},
+  {name:"Chili sin Carne mit Reis 💪",qty:1,rev:13.30,v:"sport"},
+  {name:"Veganer Mapo Tofu mit Jasminreis 💪",qty:1,rev:16.15,v:"sport"}
+];
+const maxQty = dishes[0].qty;
+const tagClass = {original:'tag-original',sport:'tag-sport',weightloss:'tag-weightloss',beilage:'tag-beilage'};
+const tagLabel = {original:'Original',sport:'Sport',weightloss:'Weightloss',beilage:'Beilage'};
+const barColor = {original:'var(--blue)',sport:'var(--purple)',weightloss:'var(--red)',beilage:'var(--yellow)'};
+function renderDishes(filter) {
+  const tbody = document.getElementById('dishTable');
+  const filtered = filter === 'all' ? dishes : dishes.filter(d => d.v === filter);
+  let rank = 0;
+  tbody.innerHTML = filtered.map(d => {
+    rank++;
+    const pct = (d.qty / maxQty * 100).toFixed(0);
+    const tc = tagClass[d.v] || 'tag-andere';
+    const tl = tagLabel[d.v] || 'Andere';
+    const bc = barColor[d.v] || 'var(--muted)';
+    const isTop3 = rank <= 3;
+    return `<tr>
+      <td><span class="rank ${isTop3?'rank-top':''}">${rank}</span></td>
+      <td style="text-align:left">
+        <span class="qty-bar" style="width:${Math.max(pct*1.5,4)}px;background:${bc}"></span>
+        <span class="dish-name">${d.name}</span>
+      </td>
+      <td><strong>${d.qty.toLocaleString('de-CH')}</strong></td>
+      <td>${d.rev > 0 ? d.rev.toLocaleString('de-CH', {minimumFractionDigits:2}) : '–'}</td>
+      <td><span class="variant-tag ${tc}">${tl}</span></td>
+    </tr>`;
+  }).join('');
+}
+function filterDishes(v) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  renderDishes(v);
+}
+renderDishes('all');
+</script>
+</body>
+</html>
