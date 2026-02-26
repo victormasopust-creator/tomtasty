@@ -111,10 +111,20 @@ async function fetchAllActiveSubscriptions() {
   while (true) {
     if (page > 1) await delay(1500); // Loop limit: 2 req / 3s für subscription listing
     console.log("[Loop] Fetch Seite", page);
-    const resp = await fetch(LOOP_API_BASE + "/subscription?status=ACTIVE&limit=250&page=" + page, {
-      headers: { "X-Loop-Token": LOOP_API_TOKEN },
-      timeout: 20000
-    });
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 20000);
+    let resp;
+    try {
+      resp = await fetch(LOOP_API_BASE + "/subscription?status=ACTIVE&limit=250&page=" + page, {
+        headers: { "X-Loop-Token": LOOP_API_TOKEN },
+        signal: ctrl.signal
+      });
+    } catch (e) {
+      clearTimeout(tid);
+      if (e.name === "AbortError") throw new Error("Loop API Timeout (>20s) auf Seite " + page + " – Netzwerk oder Token prüfen");
+      throw e;
+    }
+    clearTimeout(tid);
     console.log("[Loop] Seite", page, "Status:", resp.status);
     if (resp.status === 429) { console.log("[Loop] Rate limit, warte 2s..."); await delay(2000); continue; }
     if (resp.status === 401 || resp.status === 403) throw new Error("Loop API Auth-Fehler (Status " + resp.status + ") – Token prüfen");
