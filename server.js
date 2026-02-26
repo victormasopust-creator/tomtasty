@@ -102,20 +102,30 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 Minuten
 
 async function fetchAllActiveSubscriptions() {
   if (subsCache.data && Date.now() - subsCache.fetchedAt < CACHE_TTL) {
+    console.log("[Loop] Cache hit:", subsCache.data.length, "Abos");
     return subsCache.data;
   }
+  if (!LOOP_API_TOKEN) throw new Error("LOOP_API_TOKEN nicht gesetzt");
+  console.log("[Loop] Starte Subscription-Fetch...");
   let allSubs = [], page = 1;
   while (true) {
     if (page > 1) await delay(1500); // Loop limit: 2 req / 3s für subscription listing
+    console.log("[Loop] Fetch Seite", page);
     const resp = await fetch(LOOP_API_BASE + "/subscription?status=ACTIVE&limit=250&page=" + page, {
-      headers: { "X-Loop-Token": LOOP_API_TOKEN }
+      headers: { "X-Loop-Token": LOOP_API_TOKEN },
+      timeout: 20000
     });
-    if (resp.status === 429) { await delay(2000); continue; }
+    console.log("[Loop] Seite", page, "Status:", resp.status);
+    if (resp.status === 429) { console.log("[Loop] Rate limit, warte 2s..."); await delay(2000); continue; }
+    if (resp.status === 401 || resp.status === 403) throw new Error("Loop API Auth-Fehler (Status " + resp.status + ") – Token prüfen");
+    if (!resp.ok) throw new Error("Loop API Fehler: Status " + resp.status);
     const data = await resp.json();
     allSubs = allSubs.concat(data.data || []);
+    console.log("[Loop] Seite", page, "geladen,", (data.data || []).length, "Abos, Total:", allSubs.length);
     if (!data.pageInfo || !data.pageInfo.hasNextPage) break;
     page++;
   }
+  console.log("[Loop] Fertig:", allSubs.length, "Abos geladen");
   subsCache = { data: allSubs, fetchedAt: Date.now() };
   return allSubs;
 }
