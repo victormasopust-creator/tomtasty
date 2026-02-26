@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tom Tasty - Kueche</title>
+<style>
+:root{--tt-green:#2D5016;--tt-green-light:#E8F5E1;--tt-green-mid:#4A7C23;--bg:#F6F6F7;--card:#FFF;--text:#1A1A1A;--text-secondary:#6B7280;--border:#E5E7EB;--shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);--radius:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;background:var(--bg);color:var(--text);padding:24px;line-height:1.5}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.header-left h1{font-size:24px;font-weight:700;color:var(--tt-green);display:flex;align-items:center;gap:10px}
+.header-left h1 span{font-size:28px}
+.header-left .subtitle{font-size:13px;color:var(--text-secondary);margin-top:2px}
+.header-actions{display:flex;gap:10px}
+.btn{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text);display:flex;align-items:center;gap:6px;transition:all .15s}
+.btn:hover{background:#f3f4f6;box-shadow:var(--shadow)}
+.btn-primary{background:var(--tt-green);color:#fff;border-color:var(--tt-green)}
+.btn-primary:hover{background:var(--tt-green-mid)}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+.kpi-card{background:var(--card);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.kpi-card .label{font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px}
+.kpi-card .value{font-size:32px;font-weight:700;color:var(--text);margin-top:4px}
+.kpi-card .sub{font-size:12px;color:var(--text-secondary);margin-top:2px}
+.kpi-card.highlight{border-left:4px solid var(--tt-green)}
+.variant-bar{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.variant-badge{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:var(--card);border:1px solid var(--border);box-shadow:var(--shadow)}
+.variant-badge .dot{width:10px;height:10px;border-radius:50%}
+.dot-original{background:#2563EB}.dot-sport{background:#F59E0B}.dot-weightloss{background:#EF4444}.dot-beilage{background:#8B5CF6}
+.table-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;margin-bottom:24px}
+.table-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.table-header h2{font-size:16px;font-weight:700}
+.table-header .count{font-size:13px;color:var(--text-secondary);background:var(--bg);padding:4px 12px;border-radius:12px}
+table{width:100%;border-collapse:collapse}
+thead th{background:#FAFAFA;padding:10px 16px;font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px;text-align:left;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+thead th.num{text-align:center}
+tbody tr{border-bottom:1px solid #F3F4F6;transition:background .1s}
+tbody tr:hover{background:#F9FAFB}
+tbody td{padding:12px 16px;font-size:14px}
+td.num{text-align:center;font-variant-numeric:tabular-nums}
+td.num.highlight{font-weight:700;font-size:15px}
+td.dish-name{font-weight:500}
+td.revenue{text-align:right;color:var(--text-secondary);font-variant-numeric:tabular-nums}
+.variant-pill{padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600;min-width:28px;text-align:center;display:inline-block}
+.pill-original{background:#DBEAFE;color:#1E40AF}
+.pill-sport{background:#FEF3C7;color:#92400E}
+.pill-weightloss{background:#FEE2E2;color:#991B1B}
+.pill-beilage{background:#EDE9FE;color:#5B21B6}
+.total-row td{font-weight:700;font-size:14px;background:var(--tt-green-light);border-top:2px solid var(--tt-green);padding:14px 16px}
+.tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--card);border-radius:10px;padding:4px;box-shadow:var(--shadow);border:1px solid var(--border);width:fit-content}
+.tab{padding:8px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--text-secondary);transition:all .15s}
+.tab.active{background:var(--tt-green);color:#fff}
+.tab:hover:not(.active){background:#F3F4F6}
+.tab-content{display:none}.tab-content.active{display:block}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 0;color:var(--text-secondary)}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top:3px solid var(--tt-green);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.order-items{display:flex;flex-wrap:wrap;gap:4px}
+.order-item-tag{background:#F3F4F6;padding:2px 8px;border-radius:4px;font-size:12px;white-space:nowrap}
+.order-city{font-size:12px;color:var(--text-secondary)}
+@media print{body{padding:0;background:#fff}.header-actions,.tabs,.no-print{display:none!important}.table-card{box-shadow:none;border:1px solid #ddd}}
+</style>
+</head>
+<body>
+<div class="header"><div class="header-left"><h1><span>&#127859;</span> Produktionsliste Kueche</h1><div class="subtitle" id="subtitle">Wird geladen...</div></div><div class="header-actions no-print"><button class="btn" onclick="window.print()">&#128424; Drucken</button><button class="btn btn-primary" onclick="loadData()">&#128260; Aktualisieren</button></div></div>
+<div id="loading" class="loading"><div class="spinner"></div><div>Bestellungen werden geladen...</div></div>
+<div id="content" style="display:none">
+<div class="kpi-grid" id="kpi-grid"></div>
+<div class="variant-bar" id="variant-bar"></div>
+<div class="tabs no-print"><button class="tab active" data-tab="production" onclick="switchTab('production')">Produktionsliste</button><button class="tab" data-tab="orders" onclick="switchTab('orders')">Bestellungen</button></div>
+<div id="tab-production" class="tab-content active"><div class="table-card"><div class="table-header"><h2>Gerichte &amp; Portionen</h2><span class="count" id="dish-count"></span></div><div style="overflow-x:auto"><table><thead><tr><th style="width:35%">Gericht</th><th class="num" style="width:10%">Total</th><th class="num">Original &#9878;&#65039;</th><th class="num">Sport &#128170;</th><th class="num">Weightloss &#128293;</th><th class="num">Beilage</th><th style="text-align:right;width:12%">Umsatz</th></tr></thead><tbody id="production-body"></tbody></table></div></div></div>
+<div id="tab-orders" class="tab-content"><div class="table-card"><div class="table-header"><h2>Einzelbestellungen</h2><span class="count" id="order-count"></span></div><div style="overflow-x:auto"><table><thead><tr><th>Bestellung</th><th>Datum</th><th>Stadt</th><th>Gerichte</th><th class="num">Portionen</th><th style="text-align:right">Total CHF</th></tr></thead><tbody id="orders-body"></tbody></table></div></div></div>
+</div>
+<script>
+function switchTab(t){document.querySelectorAll('.tab').forEach(function(e){e.classList.remove('active')});document.querySelectorAll('.tab-content').forEach(function(e){e.classList.remove('active')});document.querySelector('[data-tab="'+t+'"]').classList.add('active');document.getElementById('tab-'+t).classList.add('active')}
+function chf(n){return'CHF '+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,"'")}
+function fmtDate(iso){return new Date(iso).toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric'})}
+function fmtTime(iso){return new Date(iso).toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'})}
+function renderKPIs(d){var a=d.totals.revenue/Math.max(d.totalOrders,1),p=d.totalPortions/Math.max(d.totalOrders,1);document.getElementById('kpi-grid').innerHTML='<div class="kpi-card highlight"><div class="label">Offene Bestellungen</div><div class="value">'+d.totalOrders+'</div><div class="sub">bezahlt &amp; unversendet</div></div><div class="kpi-card highlight"><div class="label">Portionen Total</div><div class="value">'+d.totalPortions+'</div><div class="sub">alle Gerichte &amp; Beilagen</div></div><div class="kpi-card"><div class="label">Gesamtumsatz</div><div class="value" style="font-size:24px">'+chf(d.totals.revenue)+'</div><div class="sub">Avg '+chf(a)+' pro Bestellung</div></div><div class="kpi-card"><div class="label">Avg Portionen/Bestellung</div><div class="value">'+p.toFixed(1)+'</div><div class="sub">'+d.dishes.length+' verschiedene Gerichte</div></div>'}
+function renderVariants(d){var t=d.totals;document.getElementById('variant-bar').innerHTML='<div class="variant-badge"><div class="dot dot-original"></div>Original '+t.original+'</div><div class="variant-badge"><div class="dot dot-sport"></div>Sport '+t.sport+'</div><div class="variant-badge"><div class="dot dot-weightloss"></div>Weightloss '+t.weightloss+'</div><div class="variant-badge"><div class="dot dot-beilage"></div>Beilagen '+t.beilage+'</div>'}
+function renderProduction(d){var b=document.getElementById('production-body'),h='';for(var i=0;i<d.dishes.length;i++){var x=d.dishes[i];h+='<tr><td class="dish-name">'+x.name+'</td><td class="num highlight">'+x.total+'</td><td class="num">'+(x.original?'<span class="variant-pill pill-original">'+x.original+'</span>':'\u2013')+'</td><td class="num">'+(x.sport?'<span class="variant-pill pill-sport">'+x.sport+'</span>':'\u2013')+'</td><td class="num">'+(x.weightloss?'<span class="variant-pill pill-weightloss">'+x.weightloss+'</span>':'\u2013')+'</td><td class="num">'+(x.beilage?'<span class="variant-pill pill-beilage">'+x.beilage+'</span>':'\u2013')+'</td><td class="revenue">'+chf(x.revenue)+'</td></tr>'}var t=d.totals;h+='<tr class="total-row"><td>TOTAL</td><td class="num">'+t.total+'</td><td class="num">'+t.original+'</td><td class="num">'+t.sport+'</td><td class="num">'+t.weightloss+'</td><td class="num">'+t.beilage+'</td><td class="revenue">'+chf(t.revenue)+'</td></tr>';b.innerHTML=h;document.getElementById('dish-count').textContent=d.dishes.length+' Gerichte'}
+function renderOrders(d){var b=document.getElementById('orders-body'),h='';for(var i=0;i<d.orders.length;i++){var o=d.orders[i];var p=o.items.reduce(function(s,x){return s+x.qty},0);var tags=o.items.slice(0,4).map(function(x){return'<span class="order-item-tag">'+x.qty+'x '+x.clean.substring(0,28)+'</span>'}).join('');var more=o.items.length>4?'<span class="order-item-tag">+'+String(o.items.length-4)+' weitere</span>':'';h+='<tr><td><strong>'+o.name+'</strong><br><span class="order-city">'+o.email.substring(0,25)+'</span></td><td>'+fmtDate(o.created)+'<br><span class="order-city">'+fmtTime(o.created)+'</span></td><td>'+o.city+'<br><span class="order-city">'+o.plz+'</span></td><td><div class="order-items">'+tags+more+'</div></td><td class="num highlight">'+p+'</td><td class="revenue"><strong>'+chf(o.total)+'</strong></td></tr>'}b.innerHTML=h;document.getElementById('order-count').textContent=d.totalOrders+' Bestellungen'}
+async function loadData(){document.getElementById('loading').style.display='flex';document.getElementById('content').style.display='none';try{var r=await fetch('/api/production');var d=await r.json();if(d.error)throw new Error(d.error);var ts=new Date(d.timestamp);document.getElementById('subtitle').textContent='Stand: '+ts.toLocaleDateString('de-CH')+' '+ts.toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'})+' | '+d.totalOrders+' Bestellungen | '+d.totalPortions+' Portionen';renderKPIs(d);renderVariants(d);renderProduction(d);renderOrders(d);document.getElementById('loading').style.display='none';document.getElementById('content').style.display='block'}catch(e){document.getElementById('loading').innerHTML='<div style="color:#EF4444;font-size:16px">Fehler: '+e.message+'</div><button class="btn btn-primary" style="margin-top:16px" onclick="loadData()">Nochmal versuchen</button>'}}
+setInterval(loadData,5*60*1000);
+loadData();
+</script>
+</body>
+</html>
