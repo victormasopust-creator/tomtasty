@@ -80,15 +80,16 @@ app.get("/api/production", requireAuth, async (req, res) => {
       const city = o.shipping_address?.city || "N/A", plz = o.shipping_address?.zip || "", items = [];
       for (const li of o.line_items || []) {
         const raw = li.title, clean = cleanName(raw), variant = getVariant(raw), qty = li.quantity, price = parseFloat(li.price);
-        if (!dishes[clean]) dishes[clean] = {total:0,original:0,sport:0,weightloss:0,beilage:0,standard:0,tasting:0,revenue:0};
-        dishes[clean].total += qty; dishes[clean].revenue += price * qty;
+        const sku = (li.sku||'').trim() || clean;
+        if (!dishes[sku]) dishes[sku] = {sku:(li.sku||'').trim(),names:new Set(),total:0,original:0,sport:0,weightloss:0,beilage:0,standard:0,tasting:0,revenue:0};
+        dishes[sku].names.add(clean); dishes[sku].total += qty; dishes[sku].revenue += price * qty;
         const km = {Original:"original",Sport:"sport",Weightloss:"weightloss",Beilage:"beilage",Standard:"standard","Tasting-Box":"tasting"};
-        dishes[clean][km[variant]||"standard"] += qty;
+        dishes[sku][km[variant]||"standard"] += qty;
         items.push({rawTitle:raw,clean,variant,qty,price,lineTotal:price*qty});
       }
       orderDetails.push({name:o.name,email:o.email,city,plz,created:o.created_at,total:parseFloat(o.current_total_price),tags:o.tags||"",note:o.note||"",items});
     }
-    const sorted = Object.entries(dishes).sort((a,b) => b[1].total - a[1].total).map(([name,data]) => ({name,...data}));
+    const sorted = Object.entries(dishes).sort((a,b) => b[1].total - a[1].total).map(([key,data]) => { const {names,...rest} = data; return {...rest, names:[...names]}; });
     const totals = sorted.reduce((a,d) => ({total:a.total+d.total,original:a.original+d.original,sport:a.sport+d.sport,weightloss:a.weightloss+d.weightloss,beilage:a.beilage+d.beilage,standard:a.standard+d.standard,revenue:a.revenue+d.revenue}),{total:0,original:0,sport:0,weightloss:0,beilage:0,standard:0,revenue:0});
     res.json({timestamp:new Date().toISOString(),totalOrders:filtered.length,totalPortions:totals.total,totals,dishes:sorted,orders:orderDetails.sort((a,b)=>b.total-a.total)});
   } catch (err) { console.error("API Error:", err); res.status(500).json({error:err.message}); }
