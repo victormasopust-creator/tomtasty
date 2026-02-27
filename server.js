@@ -82,7 +82,7 @@ app.get("/api/production", requireAuth, async (req, res) => {
         const raw = li.title, clean = cleanName(raw), variant = getVariant(raw), qty = li.quantity, price = parseFloat(li.price);
         const sku = (li.sku||'').trim() || clean;
         if (!dishes[sku]) dishes[sku] = {sku:(li.sku||'').trim(),names:new Set(),total:0,original:0,sport:0,weightloss:0,beilage:0,standard:0,tasting:0,revenue:0};
-        dishes[sku].names.add(clean); dishes[sku].total += qty; dishes[sku].revenue += price * qty;
+        dishes[sku].names.add(raw); dishes[sku].total += qty; dishes[sku].revenue += (price * qty) - parseFloat(li.total_discount || 0);
         const km = {Original:"original",Sport:"sport",Weightloss:"weightloss",Beilage:"beilage",Standard:"standard","Tasting-Box":"tasting"};
         dishes[sku][km[variant]||"standard"] += qty;
         items.push({rawTitle:raw,clean,variant,qty,price,lineTotal:price*qty});
